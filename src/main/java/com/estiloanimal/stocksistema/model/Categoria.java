@@ -1,6 +1,8 @@
 package com.estiloanimal.stocksistema.model;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,4 +30,9 @@ public class Categoria {
     @JsonIgnoreProperties("categoria")
     @OneToMany(mappedBy = "categoria")
     private List<Producto> productos;
+
+    @JsonCreator
+    public Categoria(@JsonProperty("id") Long id) {
+        this.id = id;
+    }
 }
