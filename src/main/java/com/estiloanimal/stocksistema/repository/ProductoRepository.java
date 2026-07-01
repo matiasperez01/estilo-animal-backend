@@ -27,4 +27,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findByStockEquals(Integer stock);
 
     boolean existsByCodigoBarra(String codigoBarra);
+
+    List<Producto> findByDestacadoTrue(Boolean destacado);
+
+    List<Producto> findByDestacadoTrue();
 }

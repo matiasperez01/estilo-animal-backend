@@ -52,6 +52,11 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.listarProductosBajoStock());
     }
 
+    @GetMapping("/destacados")
+    public ResponseEntity<List<Producto>> listarDestacados() {
+        return ResponseEntity.ok(productoService.listarDestacados());
+    }
+
     @PostMapping
     public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.guardar(producto));

@@ -67,7 +67,7 @@ public class ProductoService {
         producto.setCodigoBarra(productoActualizado.getCodigoBarra());
         producto.setImagenUrl(productoActualizado.getImagenUrl());
         producto.setEspecie(productoActualizado.getEspecie());
-
+        producto.setDestacado(productoActualizado.getDestacado());
         if (productoActualizado.getCategoria() != null && productoActualizado.getCategoria().getId() != null) {
             producto.setCategoria(categoriaRepository.findById(productoActualizado.getCategoria().getId()).orElse(null));
         } else {
@@ -97,4 +97,9 @@ public class ProductoService {
         Producto producto = buscarPorId(id);
         productoRepository.delete(producto);
     }
+
+    public List<Producto> listarDestacados() {
+        return productoRepository.findByDestacadoTrue();
+    }
+
 }

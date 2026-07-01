@@ -60,4 +60,7 @@ public class Producto {
     @JsonIgnoreProperties("producto")
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VarianteProducto> variantes;
+
+    @Column(nullable = false)
+    private Boolean destacado = false;
 }
