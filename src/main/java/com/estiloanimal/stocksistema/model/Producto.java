@@ -63,4 +63,9 @@ public class Producto {
 
     @Column(nullable = false)
     private Boolean destacado = false;
+
+    @JsonIgnoreProperties("producto")
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orden ASC")
+    private List<ImagenProducto> imagenes;
 }
