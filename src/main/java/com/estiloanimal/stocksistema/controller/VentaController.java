@@ -43,6 +43,11 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ventaService.registrar(venta));
     }
 
+    @PostMapping("/manual")
+    public ResponseEntity<Venta> crearManual(@RequestBody Venta venta) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ventaService.crearVentaManual(venta));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         ventaService.eliminar(id);

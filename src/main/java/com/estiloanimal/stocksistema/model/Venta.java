@@ -35,6 +35,13 @@ public class Venta {
     @Column(length = 255)
     private String observaciones;
 
+    @Column(name = "costo_envio", precision = 10, scale = 2)
+    private BigDecimal costoEnvio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private OrigenVenta origen;
+
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
@@ -44,14 +51,23 @@ public class Venta {
 
     @PrePersist
     public void prePersist() {
-        this.fecha = LocalDateTime.now();
+        if (this.fecha == null) {
+            this.fecha = LocalDateTime.now();
+        }
         if (this.estado == null) {
             this.estado = EstadoVenta.COMPLETADA;
+        }
+        if (this.origen == null) {
+            this.origen = OrigenVenta.WEB;
         }
     }
 
     public enum EstadoVenta {
         PENDIENTE, EN_PREPARACION, ENTREGADO, COMPLETADA, CANCELADA
+    }
+
+    public enum OrigenVenta {
+        WEB, MANUAL
     }
 
     @Column(length = 100)

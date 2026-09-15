@@ -60,57 +60,71 @@ public class VentaService {
 
         if (estado == Venta.EstadoVenta.ENTREGADO && estadoAnterior != Venta.EstadoVenta.ENTREGADO) {
             for (DetalleVenta detalle : venta.getDetalles()) {
-                if (detalle.getProducto() != null) {
-                    productoService.actualizarStock(detalle.getProducto().getId(), -detalle.getCantidad());
-                } else if (detalle.getNombreProducto() != null) {
-                    List<Producto> productos = productoService.buscarPorNombre(detalle.getNombreProducto());
-                    if (!productos.isEmpty()) {
-                        Producto producto = productos.get(0);
-                        List<VarianteProducto> variantes = varianteRepository.findByProductoId(producto.getId());
-
-                        if (variantes.isEmpty()) {
-                            // Sin variantes — descontar stock del producto directamente
-                            productoService.actualizarStock(producto.getId(), -detalle.getCantidad());
-                        } else if (detalle.getTalle() != null) {
-                            // Con variantes — buscar la variante por talle
-                            variantes.stream()
-                                    .filter(v -> v.getTalle().equalsIgnoreCase(detalle.getTalle()))
-                                    .findFirst()
-                                    .ifPresent(v -> {
-                                        v.setStock(v.getStock() - detalle.getCantidad());
-                                        varianteRepository.save(v);
-                                    });
-                        }
-                    }
-                }
+                ajustarStockDetalle(detalle, -1);
             }
         }
 
         if (estado == Venta.EstadoVenta.CANCELADA && estadoAnterior == Venta.EstadoVenta.ENTREGADO) {
             for (DetalleVenta detalle : venta.getDetalles()) {
-                if (detalle.getProducto() != null) {
-                    productoService.actualizarStock(detalle.getProducto().getId(), detalle.getCantidad());
-                } else if (detalle.getNombreProducto() != null) {
-                    List<Producto> productos = productoService.buscarPorNombre(detalle.getNombreProducto());
-                    if (!productos.isEmpty()) {
-                        Producto producto = productos.get(0);
-                        List<VarianteProducto> variantes = varianteRepository.findByProductoId(producto.getId());
-
-                        if (variantes.isEmpty()) {
-                            productoService.actualizarStock(producto.getId(), detalle.getCantidad());
-                        } else if (detalle.getTalle() != null) {
-                            variantes.stream()
-                                    .filter(v -> v.getTalle().equalsIgnoreCase(detalle.getTalle()))
-                                    .findFirst()
-                                    .ifPresent(v -> {
-                                        v.setStock(v.getStock() + detalle.getCantidad());
-                                        varianteRepository.save(v);
-                                    });
-                        }
-                    }
-                }
+                ajustarStockDetalle(detalle, 1);
             }
         }
+
+        return ventaRepository.save(venta);
+    }
+
+    // Descuenta (signo -1) o devuelve (signo +1) stock para un detalle de venta,
+    // respetando el talle/variante puntual cuando el producto tiene variantes.
+    private void ajustarStockDetalle(DetalleVenta detalle, int signo) {
+        Long productoId = detalle.getProducto() != null ? detalle.getProducto().getId() : null;
+
+        if (productoId == null && detalle.getNombreProducto() != null) {
+            List<Producto> productos = productoService.buscarPorNombre(detalle.getNombreProducto());
+            if (!productos.isEmpty()) {
+                productoId = productos.get(0).getId();
+            }
+        }
+
+        if (productoId == null) return;
+
+        List<VarianteProducto> variantes = varianteRepository.findByProductoId(productoId);
+
+        if (variantes.isEmpty()) {
+            productoService.actualizarStock(productoId, signo * detalle.getCantidad());
+        } else if (detalle.getTalle() != null) {
+            variantes.stream()
+                    .filter(v -> v.getTalle().equalsIgnoreCase(detalle.getTalle()))
+                    .findFirst()
+                    .ifPresent(v -> {
+                        v.setStock(v.getStock() + signo * detalle.getCantidad());
+                        varianteRepository.save(v);
+                    });
+        }
+    }
+
+    // Venta manual cargada desde el admin (fuera del checkout): descuenta stock
+    // al instante y respeta el precio que cargue el admin en vez de recalcularlo.
+    public Venta crearVentaManual(Venta venta) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (DetalleVenta detalle : venta.getDetalles()) {
+            detalle.setVenta(venta);
+            if (detalle.getSubtotal() == null && detalle.getPrecioUnitario() != null && detalle.getCantidad() != null) {
+                detalle.setSubtotal(detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad())));
+            }
+            if (detalle.getSubtotal() != null) {
+                total = total.add(detalle.getSubtotal());
+            }
+            ajustarStockDetalle(detalle, -1);
+        }
+
+        if (venta.getCostoEnvio() != null) {
+            total = total.add(venta.getCostoEnvio());
+        }
+
+        venta.setOrigen(Venta.OrigenVenta.MANUAL);
+        venta.setEstado(Venta.EstadoVenta.COMPLETADA);
+        venta.setTotal(total);
 
         return ventaRepository.save(venta);
     }
