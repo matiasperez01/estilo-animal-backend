@@ -71,6 +71,7 @@ public class ProductoService {
         producto.setImagenUrl(productoActualizado.getImagenUrl());
         producto.setEspecie(productoActualizado.getEspecie());
         producto.setDestacado(productoActualizado.getDestacado());
+        producto.setTipoVariante(productoActualizado.getTipoVariante());
         if (productoActualizado.getCategoria() != null && productoActualizado.getCategoria().getId() != null) {
             producto.setCategoria(categoriaRepository.findById(productoActualizado.getCategoria().getId()).orElse(null));
         } else {

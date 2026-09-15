@@ -57,6 +57,11 @@ public class Producto {
 
     private String imagenUrl;
 
+    // Nombre del atributo que representan las variantes de este producto
+    // (Talle, Color, Sabor, Tamaño, o uno personalizado). Null = "Talle" por compatibilidad.
+    @Column(name = "tipo_variante", length = 30)
+    private String tipoVariante;
+
     @JsonIgnoreProperties("producto")
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VarianteProducto> variantes;
