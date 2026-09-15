@@ -54,6 +54,9 @@ public class ProductoService {
                 productoRepository.existsByCodigoBarra(producto.getCodigoBarra())) {
             throw new RuntimeException("Ya existe un producto con el código: " + producto.getCodigoBarra());
         }
+        if (producto.getDestacado() == null) {
+            producto.setDestacado(false);
+        }
         return productoRepository.save(producto);
     }
 

@@ -62,6 +62,7 @@ public class Producto {
     private List<VarianteProducto> variantes;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean destacado = false;
 
     @JsonIgnoreProperties("producto")
