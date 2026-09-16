@@ -4,6 +4,7 @@ import com.estiloanimal.stocksistema.model.DetalleVenta;
 import com.estiloanimal.stocksistema.model.Producto;
 import com.estiloanimal.stocksistema.model.VarianteProducto;
 import com.estiloanimal.stocksistema.model.Venta;
+import com.estiloanimal.stocksistema.repository.ProductoRepository;
 import com.estiloanimal.stocksistema.repository.VarianteProductoRepository;
 import com.estiloanimal.stocksistema.repository.VentaRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,15 @@ public class VentaService {
     private final VentaRepository ventaRepository;
     private final ProductoService productoService;
     private final VarianteProductoRepository varianteRepository;
+    private final ProductoRepository productoRepository;
+
+    // Si el detalle vino con "productoId" (id plano) en vez de un objeto
+    // "producto" anidado, lo resuelve a una referencia gestionada por Hibernate.
+    private void resolverProducto(DetalleVenta detalle) {
+        if (detalle.getProducto() == null && detalle.getProductoId() != null) {
+            detalle.setProducto(productoRepository.getReferenceById(detalle.getProductoId()));
+        }
+    }
 
     public List<Venta> listarTodas() {
         return ventaRepository.findAll();
@@ -109,6 +119,7 @@ public class VentaService {
 
         for (DetalleVenta detalle : venta.getDetalles()) {
             detalle.setVenta(venta);
+            resolverProducto(detalle);
             if (detalle.getSubtotal() == null && detalle.getPrecioUnitario() != null && detalle.getCantidad() != null) {
                 detalle.setSubtotal(detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad())));
             }
@@ -176,6 +187,7 @@ public class VentaService {
         if (venta.getDetalles() != null) {
             for (DetalleVenta detalle : venta.getDetalles()) {
                 detalle.setVenta(venta);
+                resolverProducto(detalle);
                 if (detalle.getSubtotal() == null && detalle.getPrecioUnitario() != null && detalle.getCantidad() != null) {
                     detalle.setSubtotal(
                             detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad()))

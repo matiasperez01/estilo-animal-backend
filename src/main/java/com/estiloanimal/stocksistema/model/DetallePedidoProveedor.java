@@ -42,6 +42,12 @@ public class DetallePedidoProveedor {
     @JoinColumn(name = "producto_id", nullable = true)
     private Producto producto;
 
+    // Alternativa a mandar "producto": {"id": N} desde el frontend: un id
+    // plano que el service resuelve con getReferenceById en vez de depender
+    // de que Jackson arme el objeto Producto anidado.
+    @Transient
+    private Long productoId;
+
     @PrePersist
     @PreUpdate
     public void calcularSubtotal() {

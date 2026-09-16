@@ -4,6 +4,7 @@ import com.estiloanimal.stocksistema.model.DetallePedidoProveedor;
 import com.estiloanimal.stocksistema.model.PedidoProveedor;
 import com.estiloanimal.stocksistema.model.VarianteProducto;
 import com.estiloanimal.stocksistema.repository.PedidoProveedorRepository;
+import com.estiloanimal.stocksistema.repository.ProductoRepository;
 import com.estiloanimal.stocksistema.repository.VarianteProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,15 @@ public class PedidoProveedorService {
     private final PedidoProveedorRepository pedidoProveedorRepository;
     private final ProductoService productoService;
     private final VarianteProductoRepository varianteRepository;
+    private final ProductoRepository productoRepository;
+
+    // Si el detalle vino con "productoId" (id plano) en vez de un objeto
+    // "producto" anidado, lo resuelve a una referencia gestionada por Hibernate.
+    private void resolverProducto(DetallePedidoProveedor detalle) {
+        if (detalle.getProducto() == null && detalle.getProductoId() != null) {
+            detalle.setProducto(productoRepository.getReferenceById(detalle.getProductoId()));
+        }
+    }
 
     public List<PedidoProveedor> listarTodos() {
         return pedidoProveedorRepository.findAll();
@@ -36,6 +46,7 @@ public class PedidoProveedorService {
         if (pedido.getDetalles() != null) {
             for (DetallePedidoProveedor detalle : pedido.getDetalles()) {
                 detalle.setPedido(pedido);
+                resolverProducto(detalle);
                 if (detalle.getSubtotal() == null && detalle.getPrecioUnitario() != null && detalle.getCantidad() != null) {
                     detalle.setSubtotal(detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad())));
                 }
