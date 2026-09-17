@@ -79,4 +79,10 @@ public class Producto {
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden ASC")
     private List<ImagenProducto> imagenes;
+
+    // Calculado (no persistido): true si el producto tiene un pedido a
+    // proveedor pendiente de recibir. Lo completa ProductoService al armar
+    // la respuesta, no se guarda en la base.
+    @Transient
+    private Boolean proximamente;
 }

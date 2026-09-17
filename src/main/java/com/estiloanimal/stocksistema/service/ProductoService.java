@@ -1,15 +1,19 @@
 package com.estiloanimal.stocksistema.service;
 
+import com.estiloanimal.stocksistema.model.PedidoProveedor;
 import com.estiloanimal.stocksistema.model.Producto;
 import com.estiloanimal.stocksistema.model.VarianteProducto;
 import com.estiloanimal.stocksistema.repository.CategoriaRepository;
+import com.estiloanimal.stocksistema.repository.DetallePedidoProveedorRepository;
 import com.estiloanimal.stocksistema.repository.ProductoRepository;
 import com.estiloanimal.stocksistema.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final ProveedorRepository proveedorRepository;
+    private final DetallePedidoProveedorRepository detallePedidoProveedorRepository;
 
     // Orden natural de talles/opciones (numérico si corresponde) para que al
     // agregar un talle más chico que los existentes no quede al final de la lista.
@@ -33,14 +38,31 @@ public class ProductoService {
         return productos;
     }
 
+    // Marca "proximamente" = true en los productos que tienen un pedido a
+    // proveedor todavía PENDIENTE, para mostrarlos como "Próximamente" /
+    // "Reservar" en la tienda en vez de "Sin stock".
+    private List<Producto> marcarProximamente(List<Producto> productos) {
+        Set<Long> idsProximamente = new HashSet<>(
+                detallePedidoProveedorRepository.findProductoIdsPorEstadoPedido(PedidoProveedor.EstadoPedidoProveedor.PENDIENTE)
+        );
+        productos.forEach(p -> p.setProximamente(idsProximamente.contains(p.getId())));
+        return productos;
+    }
+
+    private Producto marcarProximamente(Producto producto) {
+        marcarProximamente(List.of(producto));
+        return producto;
+    }
+
     public List<Producto> listarTodos() {
-        return ordenarVariantes(productoRepository.findAll());
+        return marcarProximamente(ordenarVariantes(productoRepository.findAll()));
     }
 
     public Producto buscarPorId(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         ordenarVariantes(producto);
+        marcarProximamente(producto);
         return producto;
     }
 
@@ -50,15 +72,15 @@ public class ProductoService {
     }
 
     public List<Producto> buscarPorNombre(String nombre) {
-        return ordenarVariantes(productoRepository.findByNombreContainingIgnoreCase(nombre));
+        return marcarProximamente(ordenarVariantes(productoRepository.findByNombreContainingIgnoreCase(nombre)));
     }
 
     public List<Producto> listarPorCategoria(Long categoriaId) {
-        return ordenarVariantes(productoRepository.findByCategoriaId(categoriaId));
+        return marcarProximamente(ordenarVariantes(productoRepository.findByCategoriaId(categoriaId)));
     }
 
     public List<Producto> listarPorProveedor(Long proveedorId) {
-        return ordenarVariantes(productoRepository.findByProveedorId(proveedorId));
+        return marcarProximamente(ordenarVariantes(productoRepository.findByProveedorId(proveedorId)));
     }
 
     public List<Producto> listarProductosBajoStock() {
@@ -120,7 +142,7 @@ public class ProductoService {
     }
 
     public List<Producto> listarDestacados() {
-        return ordenarVariantes(productoRepository.findByDestacadoTrue());
+        return marcarProximamente(ordenarVariantes(productoRepository.findByDestacadoTrue()));
     }
 
 }
