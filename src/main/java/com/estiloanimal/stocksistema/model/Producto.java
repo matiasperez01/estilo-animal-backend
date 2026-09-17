@@ -30,6 +30,11 @@ public class Producto {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
+    // Precio en oferta (opcional). Si está cargado y es menor al precio
+    // normal, la tienda muestra el precio normal tachado y este destacado.
+    @Column(name = "precio_descuento", precision = 10, scale = 2)
+    private BigDecimal precioDescuento;
+
     @Column(nullable = false)
     private Integer stock;
 

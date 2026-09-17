@@ -81,6 +81,7 @@ public class ProductoService {
         producto.setNombre(productoActualizado.getNombre());
         producto.setDescripcion(productoActualizado.getDescripcion());
         producto.setPrecio(productoActualizado.getPrecio());
+        producto.setPrecioDescuento(productoActualizado.getPrecioDescuento());
         producto.setStock(productoActualizado.getStock());
         producto.setStockMinimo(productoActualizado.getStockMinimo());
         producto.setCodigoBarra(productoActualizado.getCodigoBarra());
