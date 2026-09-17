@@ -17,7 +17,9 @@ public class VarianteProductoService {
     private final ProductoService productoService;
 
     public List<VarianteProducto> listarPorProducto(Long productoId) {
-        return varianteRepository.findByProductoId(productoId);
+        List<VarianteProducto> variantes = varianteRepository.findByProductoId(productoId);
+        variantes.sort((a, b) -> VarianteProducto.compararTalles(a.getTalle(), b.getTalle()));
+        return variantes;
     }
 
     public VarianteProducto guardar(Long productoId, VarianteProducto variante) {

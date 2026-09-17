@@ -1,6 +1,7 @@
 package com.estiloanimal.stocksistema.service;
 
 import com.estiloanimal.stocksistema.model.Producto;
+import com.estiloanimal.stocksistema.model.VarianteProducto;
 import com.estiloanimal.stocksistema.repository.CategoriaRepository;
 import com.estiloanimal.stocksistema.repository.ProductoRepository;
 import com.estiloanimal.stocksistema.repository.ProveedorRepository;
@@ -19,13 +20,28 @@ public class ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final ProveedorRepository proveedorRepository;
 
+    // Orden natural de talles/opciones (numérico si corresponde) para que al
+    // agregar un talle más chico que los existentes no quede al final de la lista.
+    private static void ordenarVariantes(Producto producto) {
+        if (producto.getVariantes() != null) {
+            producto.getVariantes().sort((a, b) -> VarianteProducto.compararTalles(a.getTalle(), b.getTalle()));
+        }
+    }
+
+    private static List<Producto> ordenarVariantes(List<Producto> productos) {
+        productos.forEach(ProductoService::ordenarVariantes);
+        return productos;
+    }
+
     public List<Producto> listarTodos() {
-        return productoRepository.findAll();
+        return ordenarVariantes(productoRepository.findAll());
     }
 
     public Producto buscarPorId(Long id) {
-        return productoRepository.findById(id)
+        Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+        ordenarVariantes(producto);
+        return producto;
     }
 
     public Producto buscarPorCodigoBarra(String codigoBarra) {
@@ -34,19 +50,19 @@ public class ProductoService {
     }
 
     public List<Producto> buscarPorNombre(String nombre) {
-        return productoRepository.findByNombreContainingIgnoreCase(nombre);
+        return ordenarVariantes(productoRepository.findByNombreContainingIgnoreCase(nombre));
     }
 
     public List<Producto> listarPorCategoria(Long categoriaId) {
-        return productoRepository.findByCategoriaId(categoriaId);
+        return ordenarVariantes(productoRepository.findByCategoriaId(categoriaId));
     }
 
     public List<Producto> listarPorProveedor(Long proveedorId) {
-        return productoRepository.findByProveedorId(proveedorId);
+        return ordenarVariantes(productoRepository.findByProveedorId(proveedorId));
     }
 
     public List<Producto> listarProductosBajoStock() {
-        return productoRepository.findProductosBajoStock();
+        return ordenarVariantes(productoRepository.findProductosBajoStock());
     }
 
     public Producto guardar(Producto producto) {
@@ -103,7 +119,7 @@ public class ProductoService {
     }
 
     public List<Producto> listarDestacados() {
-        return productoRepository.findByDestacadoTrue();
+        return ordenarVariantes(productoRepository.findByDestacadoTrue());
     }
 
 }
