@@ -98,6 +98,7 @@ public class PedidoProveedorService {
                         v.setStock(v.getStock() + signo * detalle.getCantidad());
                         varianteRepository.save(v);
                     });
+            productoService.recalcularStockDesdeVariantes(productoId, variantes);
         }
     }
 

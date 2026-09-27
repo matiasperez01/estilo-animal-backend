@@ -25,7 +25,9 @@ public class VarianteProductoService {
     public VarianteProducto guardar(Long productoId, VarianteProducto variante) {
         Producto producto = productoService.buscarPorId(productoId);
         variante.setProducto(producto);
-        return varianteRepository.save(variante);
+        VarianteProducto guardada = varianteRepository.save(variante);
+        productoService.recalcularStockDesdeVariantes(productoId, varianteRepository.findByProductoId(productoId));
+        return guardada;
     }
 
     public VarianteProducto actualizar(Long id, VarianteProducto varianteActualizada) {
@@ -34,11 +36,19 @@ public class VarianteProductoService {
         variante.setTalle(varianteActualizada.getTalle());
         variante.setPrecio(varianteActualizada.getPrecio());
         variante.setStock(varianteActualizada.getStock());
-        return varianteRepository.save(variante);
+        VarianteProducto actualizada = varianteRepository.save(variante);
+        Long productoId = variante.getProducto().getId();
+        productoService.recalcularStockDesdeVariantes(productoId, varianteRepository.findByProductoId(productoId));
+        return actualizada;
     }
 
     public void eliminar(Long id) {
+        VarianteProducto variante = varianteRepository.findById(id).orElse(null);
         varianteRepository.deleteById(id);
+        if (variante != null && variante.getProducto() != null) {
+            Long productoId = variante.getProducto().getId();
+            productoService.recalcularStockDesdeVariantes(productoId, varianteRepository.findByProductoId(productoId));
+        }
     }
 
     public void eliminarPorProducto(Long productoId) {

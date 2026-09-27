@@ -96,11 +96,12 @@ public class VentaService {
         }
 
         if (productoId == null) return;
+        final Long idProducto = productoId;
 
-        List<VarianteProducto> variantes = varianteRepository.findByProductoId(productoId);
+        List<VarianteProducto> variantes = varianteRepository.findByProductoId(idProducto);
 
         if (variantes.isEmpty()) {
-            productoService.actualizarStock(productoId, signo * detalle.getCantidad());
+            productoService.actualizarStock(idProducto, signo * detalle.getCantidad());
         } else if (detalle.getTalle() != null) {
             variantes.stream()
                     .filter(v -> v.getTalle().equalsIgnoreCase(detalle.getTalle()))
@@ -109,6 +110,7 @@ public class VentaService {
                         v.setStock(v.getStock() + signo * detalle.getCantidad());
                         varianteRepository.save(v);
                     });
+            productoService.recalcularStockDesdeVariantes(idProducto, variantes);
         }
     }
 

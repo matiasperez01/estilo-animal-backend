@@ -136,6 +136,18 @@ public class ProductoService {
         productoRepository.save(producto);
     }
 
+    // El stock de un producto con talles/variantes no se carga a mano: es la
+    // suma del stock de cada variante. Se recalcula y guarda cada vez que el
+    // stock de alguna variante cambia (venta, pedido a proveedor recibido,
+    // o el admin agrega/edita/borra un talle) para que quede siempre exacto.
+    public void recalcularStockDesdeVariantes(Long productoId, List<VarianteProducto> variantes) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + productoId));
+        int total = variantes.stream().mapToInt(VarianteProducto::getStock).sum();
+        producto.setStock(total);
+        productoRepository.save(producto);
+    }
+
     public void eliminar(Long id) {
         Producto producto = buscarPorId(id);
         productoRepository.delete(producto);
